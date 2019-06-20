@@ -10,8 +10,6 @@
 # %%
 library(data.table)
 regRCPqn <- function(M_data, ref_path, data_name,save_ref=TRUE, save_norm=TRUE){
-  fileName_annot450k <- "../input/HumanMethylation450_15017482_v1-2_CLEAN.csv"
-
   ###############################################
   # Set default settings of RCP
   ###############################################
@@ -22,7 +20,13 @@ regRCPqn <- function(M_data, ref_path, data_name,save_ref=TRUE, save_norm=TRUE){
   # Remove chromosomes X and Y
   # Select the same CpG in the annotation file and in the file with M-values
   ###############################################
-  annot450k <- data.frame(fread(fileName_annot450k))
+  i <-1
+  annot450k <- fread(paste0("../input/HumanMethylation450_15017482_v1-2_CLEAN_part",i,".csv"),sep="\t")
+  for (i in 2:9){
+    annot_part <- fread(paste0("../input/HumanMethylation450_15017482_v1-2_CLEAN_part",i,".csv"),sep="\t")
+    annot450k <- rbind(annot450k,annot_part)
+  }
+  annot450k <- data.frame(annot450k)
   annot450k <- annot450k[! annot450k$CHR %in% c("X","Y"), ]
   rownames(annot450k) <- annot450k$IlmnID
   rownames(M_data) <- M_data$ID_REF
@@ -116,7 +120,6 @@ regRCPqn <- function(M_data, ref_path, data_name,save_ref=TRUE, save_norm=TRUE){
 
 ###############################################
 regRCPqnREF <- function(M_data, ref_path, data_name){
-  fileName_annot450k <- "../input/HumanMethylation450_15017482_v1-2_CLEAN.csv"
   ###############################################
   # Set default settings of RCP
   ###############################################
@@ -127,7 +130,13 @@ regRCPqnREF <- function(M_data, ref_path, data_name){
   # Remove chromosomes X and Y
   # Select the same CpG in the annotation file and in the file with M-values
   ###############################################
-  annot450k <- data.frame(fread(fileName_annot450k))
+  i <-1
+  annot450k <- fread(paste0("../input/HumanMethylation450_15017482_v1-2_CLEAN_part",i,".csv"),sep="\t")
+  for (i in 2:9){
+    annot_part <- fread(paste0("../input/HumanMethylation450_15017482_v1-2_CLEAN_part",i,".csv"),sep="\t")
+    annot450k <- rbind(annot450k,annot_part)
+  }
+  annot450k <- data.frame(annot450k)
   annot450k <- annot450k[! annot450k$CHR %in% c("X","Y"), ]
   rownames(annot450k) <- annot450k$IlmnID
   rownames(M_data) <- M_data$ID_REF

@@ -5,7 +5,7 @@ setwd("/home/claudia/Documenti/lavori/Metilazione/ATLAS_epigenetic/Normalization
 source("regRCPqn_regRCPqnREF.R")
 
 # Example file containing M-values of 20 samples from GSE111629 pre-processed with swan
-fileName_M_data1 <- "../example/M_data1.txt"
+fileName_M_data1 <- "../example/M_data1_part.txt"
 M_data <- data.frame(fread(fileName_M_data1))
 ref_path <- "../example/"
 data_name <- "Example"
