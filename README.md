@@ -38,5 +38,5 @@ Usage example of regRCPqn and regRCPqnREF can be find in:
 
 ./R/test_regRCPqnREF.R
 
-Examples include samples from Chuang YH, Paul KC, Bronstein JM, Bordelon Y et al. Parkinson's disease is associated with DNA methylation levels in human blood and saliva. Genome Med 2017 Aug 30;9(1):76. (GEO accession number GSE111629).
+Examples include samples from Chuang YH, Paul KC, Bronstein JM, Bordelon Y et al. Parkinson's disease is associated with DNA methylation levels in human blood and saliva. Genome Med 2017 Aug 30;9(1):76. (GEO accession number GSE111629). Only a subset of CpG probes is included in the test files.
 
