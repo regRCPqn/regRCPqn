@@ -66,3 +66,7 @@ M_data_norm_ref <- regRCPqnREF(M_data=BloodParkinson2, ref_path=ref_path, data_n
 
 Examples include samples from Chuang YH, Paul KC, Bronstein JM, Bordelon Y et al. Parkinson's disease is associated with DNA methylation levels in human blood and saliva. Genome Med 2017 Aug 30;9(1):76. (GEO accession number GSE111629). Only a subset of CpG probes is included in the test files.
 
+In BloodParkinson1, data have been preprocessed with SWAN.
+In BloodParkinson2, data have been preprocessed with RCP.
+
+
