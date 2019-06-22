@@ -1,15 +1,13 @@
-###############################################
-### INPUT DESCRIPTION:
+#' The regRCPqn Function
+#'
+#' @param M_data: data.frame containing M-values. The first column of M_data has to be named ID_REF and to contain the CpG codes. Each other column corresponds to a sample.
+#' @param ref_path: path to folder in which files will be saved
+#' @param data_name: prefix that will be used to create the file name of the reference distribuion if save_ref is TRUE.
+#' @param save_ref (TRUE): whether to save the reference distribution of the normalized data set.
+#' regRCPqn(M_data, ref_path, data_name,save_ref=TRUE)
 
-# M_data: data.frame containing M-values. The first column of M_data has to be named ID_REF and to contain the CpG codes. Each other column corresponds to a sample.
-# ref_path: path to folder in which files will be saved
-# data_name: prefix that will be used to create the file name of the reference distribuion if save_ref is TRUE.
-# save_ref (TRUE): whether to save the reference distribution of the normalized data set.
-
-###############################################
-# %%
-library(data.table)
-regRCPqn <- function(M_data, ref_path, data_name,save_ref=TRUE, save_norm=TRUE){
+require(data.table)
+regRCPqn <- function(M_data, ref_path, data_name,save_ref=TRUE){
   ###############################################
   # Set default settings of RCP
   ###############################################
@@ -68,14 +66,14 @@ regRCPqn <- function(M_data, ref_path, data_name,save_ref=TRUE, save_norm=TRUE){
     probe.I[anno2$Infinium_Design_Type=="I"] <- rownames(anno2)[anno2$Infinium_Design_Type == "I"]
     probe.II[anno1$Infinium_Design_Type=="II"] <- rownames(anno1)[anno1$Infinium_Design_Type == "II"]
     raw.M.t <- M_data[c(probe.I, probe.II),]
-    #linear regression
+    # Linear regression
     M.II <- raw.M.t[probe.II,]
     M.I <- raw.M.t[probe.I,]
     qtl <- function(x) quantile(x, quantile.grid, na.rm=TRUE)
     M.I <- apply(M.I,2,qtl)  # compute quantiles for M.I
     M.II <- apply(M.II,2,qtl)  # compute quantiles for M.II
     beta.est <- mat.or.vec(2,ncol(M_data))
-    # for each sample select the finite quantiles of type I (Y) and of type II (X)
+    # For each sample select the finite quantiles of type I (Y) and of type II (X)
     # and estimate the regression coefficient of the model Y = beta.est * X
     for (i in 1:ncol(M_data)){
       index <- ((M.II[,i]!=Inf) & (M.II[,i]!=-Inf) & (M.I[,i]!=Inf) & (M.I[,i]!=-Inf))
@@ -110,13 +108,12 @@ regRCPqn <- function(M_data, ref_path, data_name,save_ref=TRUE, save_norm=TRUE){
 
 }
 
-# %%
-###############################################
-# INPUT DESCRIPTION:
-
-# M_data: data.frame containing M-values. The first column of M_data has to be named ID_REF and to contain the CpG codes. Each other column corresponds to a sample.
-# ref_path: path to folder in which the reference distribution of the genomic region types computed with regRCPqn have been saved.
-# data_name: prefix used in regRCPqn to save the reference distribution files
+#' The regRCPqnREF Function
+#'
+#' @param M_data: data.frame containing M-values. The first column of M_data has to be named ID_REF and to contain the CpG codes. Each other column corresponds to a sample.
+#' @param ref_path: path to folder in which the reference distribution of the genomic region types computed with regRCPqn have been saved.
+#' @param data_name: data_name: prefix used in regRCPqn to save the reference distribution files.
+#' regRCPqnREF(M_data, ref_path, data_name)
 
 ###############################################
 regRCPqnREF <- function(M_data, ref_path, data_name){
@@ -214,5 +211,3 @@ regRCPqnREF <- function(M_data, ref_path, data_name){
   }
   return(M_data)
 }
-
-# %%
