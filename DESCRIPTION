@@ -1,6 +1,6 @@
 Package: regRCPqn
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: Regional RCP quantile normalization
+Version: 0.0.0.1
 Authors@R: 
     person(given = "Claudia",
            family = "Sala",
@@ -8,7 +8,9 @@ Authors@R:
            email = "claudia.sala3@unibo.it",
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Description: An R package to normalize 450k DNA methylation data for meta-analysis.
-Depends: data.table
+Depends: data.table,
+         preprocessCore,
+         IlluminaHumanMethylation450kanno.ilmn12.hg19
 License: What license it uses
 Encoding: UTF-8
 URL: https://github.com/claudiasala/regRCPqn

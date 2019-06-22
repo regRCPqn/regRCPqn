@@ -11,9 +11,11 @@ regRCPqnREF(M_data, ref_path, data_name)
 
 \item{ref_path:}{path to folder in which the reference distribution of the genomic region types computed with regRCPqn have been saved.}
 
-\item{data_name:}{data_name: prefix used in regRCPqn to save the reference distribution files.
-regRCPqnREF(M_data, ref_path, data_name)}
+\item{data_name:}{data_name: prefix used in regRCPqn to save the reference distribution files.}
 }
 \description{
 The regRCPqnREF Function
+}
+\examples{
+regRCPqnREF(M_data, ref_path, data_name)
 }
