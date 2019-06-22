@@ -1,12 +1,17 @@
 #' The regRCPqn Function
-#'
+#' @name regRCPqn
 #' @param M_data: data.frame containing M-values. The first column of M_data has to be named ID_REF and to contain the CpG codes. Each other column corresponds to a sample.
 #' @param ref_path: path to folder in which files will be saved
 #' @param data_name: prefix that will be used to create the file name of the reference distribuion if save_ref is TRUE.
 #' @param save_ref (TRUE): whether to save the reference distribution of the normalized data set.
+#' @export
+#' @examples
 #' regRCPqn(M_data, ref_path, data_name,save_ref=TRUE)
 
 require(data.table)
+require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+require(preprocessCore)
+
 regRCPqn <- function(M_data, ref_path, data_name,save_ref=TRUE){
   ###############################################
   # Set default settings of RCP
@@ -18,31 +23,27 @@ regRCPqn <- function(M_data, ref_path, data_name,save_ref=TRUE){
   # Remove chromosomes X and Y
   # Select the same CpG in the annotation file and in the file with M-values
   ###############################################
-  i <-1
-  annot450k <- fread(paste0("../input/HumanMethylation450_15017482_v1-2_CLEAN_part",i,".csv"),sep="\t")
-  for (i in 2:9){
-    annot_part <- fread(paste0("../input/HumanMethylation450_15017482_v1-2_CLEAN_part",i,".csv"),sep="\t")
-    annot450k <- rbind(annot450k,annot_part)
-  }
-  annot450k <- data.frame(annot450k)
-  annot450k <- annot450k[! annot450k$CHR %in% c("X","Y"), ]
-  rownames(annot450k) <- annot450k$IlmnID
+  annot450k <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19::Manifest)
+  annot450k_loc <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19::Locations)
+  annot450k_island <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19::Islands.UCSC)
+  annot450k <- data.frame(cbind(annot450k,annot450k_loc))
+  annot450k <- data.frame(cbind(annot450k,annot450k_island))
+  annot450k <- annot450k[! annot450k$chr %in% c("chrX","chrY"), ]
   rownames(M_data) <- M_data$ID_REF
   cpg_kept <- intersect(rownames(annot450k), rownames(M_data))
   annot450k <- annot450k[cpg_kept,]
-  annot450k <- annot450k[order(annot450k$CHR, annot450k$MAPINFO),]
+  annot450k <- annot450k[order(annot450k$chr, annot450k$pos),]
   M_data <- M_data[rownames(annot450k),]
   M_data <- M_data[,colnames(M_data)!="ID_REF"]
   ###############################################
   # Select genomic region types
   ###############################################
-  regionTypes <- as.vector(annot450k$Relation_to_UCSC_CpG_Island)
+  regionTypes <- as.vector(annot450k$Relation_to_Island)
   regionTypes[regionTypes %in% c("N_Shore", "S_Shore")] <- "Shore"
   regionTypes[regionTypes %in% c("N_Shelf", "S_Shelf")] <- "Shelf"
-  regionTypes[regionTypes==""] <- "Ocean"
-  annot450k$Relation_to_UCSC_CpG_Island_Summary <- regionTypes
+  annot450k$Relation_to_Island <- regionTypes
   regionTypes <- unique(regionTypes)
-  annot450k$Relation_to_UCSC_CpG_Island_Summary
+  annot450k$Relation_to_Island
   ###############################################
   # Separately for each region type and quantile normalize samples:
   # - Run RCP:
@@ -52,19 +53,19 @@ regRCPqn <- function(M_data, ref_path, data_name,save_ref=TRUE){
   # - Separately for each probe type quantile normalize samples.
   ###############################################
   for (region_i in seq(length(regionTypes))){
-    annot450k_part <- annot450k[annot450k$Relation_to_UCSC_CpG_Island_Summary == regionTypes[region_i], ]
-    probe.II.Name <- annot450k_part$Name[annot450k_part$Infinium_Design_Type == "II"]
-    probe.I.Name <- annot450k_part$Name[annot450k_part$Infinium_Design_Type == "I"]
+    annot450k_part <- annot450k[annot450k$Relation_to_Island == regionTypes[region_i], ]
+    probe.II.Name <- annot450k_part$Name[annot450k_part$Type == "II"]
+    probe.I.Name <- annot450k_part$Name[annot450k_part$Type == "I"]
     anno1 <- annot450k_part[1:(nrow(annot450k_part)-1),]
     anno2 <- annot450k_part[2:nrow(annot450k_part),]
-    flag <- ((abs(anno1$MAPINFO - anno2$MAPINFO)) < dist_ & (anno1$CHR == anno2$CHR) &
-     (anno1$Infinium_Design_Type != anno2$Infinium_Design_Type))
+    flag <- ((abs(anno1$pos - anno2$pos)) < dist_ & (anno1$chr == anno2$chr) &
+     (anno1$Type != anno2$Type))
     anno1 <- anno1[flag,]
     anno2 <- anno2[flag,]
     probe.I <- rownames(anno1)
     probe.II <- rownames(anno2)
-    probe.I[anno2$Infinium_Design_Type=="I"] <- rownames(anno2)[anno2$Infinium_Design_Type == "I"]
-    probe.II[anno1$Infinium_Design_Type=="II"] <- rownames(anno1)[anno1$Infinium_Design_Type == "II"]
+    probe.I[anno2$Type=="I"] <- rownames(anno2)[anno2$Type == "I"]
+    probe.II[anno1$Type=="II"] <- rownames(anno1)[anno1$Type == "II"]
     raw.M.t <- M_data[c(probe.I, probe.II),]
     # Linear regression
     M.II <- raw.M.t[probe.II,]
@@ -96,6 +97,8 @@ regRCPqn <- function(M_data, ref_path, data_name,save_ref=TRUE){
     M_data[which(rownames(M_data) %in% probe.I.Name),] <- preprocessCore::normalize.quantiles(as.matrix(M_data[which(rownames(M_data) %in% probe.I.Name),]))
     # Compute and save target distributions:
     if(save_ref){
+      if (!dir.exists(ref_path)){dir.create(ref_path)}
+
       target_distr_II <- rowMeans(M_data[which(rownames(M_data) %in% probe.II.Name),])
       target_distr_II <- data.frame(ID_REF=names(target_distr_II), values=as.vector(target_distr_II))
       target_distr_I <- rowMeans(M_data[which(rownames(M_data) %in% probe.I.Name),])
@@ -109,10 +112,12 @@ regRCPqn <- function(M_data, ref_path, data_name,save_ref=TRUE){
 }
 
 #' The regRCPqnREF Function
-#'
+#' @name regRCPqnREF
 #' @param M_data: data.frame containing M-values. The first column of M_data has to be named ID_REF and to contain the CpG codes. Each other column corresponds to a sample.
 #' @param ref_path: path to folder in which the reference distribution of the genomic region types computed with regRCPqn have been saved.
 #' @param data_name: data_name: prefix used in regRCPqn to save the reference distribution files.
+#' @export
+#' @examples
 #' regRCPqnREF(M_data, ref_path, data_name)
 
 ###############################################
@@ -127,29 +132,25 @@ regRCPqnREF <- function(M_data, ref_path, data_name){
   # Remove chromosomes X and Y
   # Select the same CpG in the annotation file and in the file with M-values
   ###############################################
-  i <-1
-  annot450k <- fread(paste0("../input/HumanMethylation450_15017482_v1-2_CLEAN_part",i,".csv"),sep="\t")
-  for (i in 2:9){
-    annot_part <- fread(paste0("../input/HumanMethylation450_15017482_v1-2_CLEAN_part",i,".csv"),sep="\t")
-    annot450k <- rbind(annot450k,annot_part)
-  }
-  annot450k <- data.frame(annot450k)
-  annot450k <- annot450k[! annot450k$CHR %in% c("X","Y"), ]
-  rownames(annot450k) <- annot450k$IlmnID
+  annot450k <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19::Manifest)
+  annot450k_loc <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19::Locations)
+  annot450k_island <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19::Islands.UCSC)
+  annot450k <- data.frame(cbind(annot450k,annot450k_loc))
+  annot450k <- data.frame(cbind(annot450k,annot450k_island))
+  annot450k <- annot450k[! annot450k$chr %in% c("chrX","chrY"), ]
   rownames(M_data) <- M_data$ID_REF
   cpg_kept <- intersect(rownames(annot450k), rownames(M_data))
   annot450k <- annot450k[cpg_kept,]
-  annot450k <- annot450k[order(annot450k$CHR, annot450k$MAPINFO),]
+  annot450k <- annot450k[order(annot450k$chr, annot450k$pos),]
   M_data <- M_data[rownames(annot450k),]
   M_data <- M_data[,colnames(M_data)!="ID_REF"]
   ###############################################
   # Select genomic region types
   ###############################################
-  regionTypes <- as.vector(annot450k$Relation_to_UCSC_CpG_Island)
+  regionTypes <- as.vector(annot450k$Relation_to_Island)
   regionTypes[regionTypes %in% c("N_Shore", "S_Shore")] <- "Shore"
   regionTypes[regionTypes %in% c("N_Shelf", "S_Shelf")] <- "Shelf"
-  regionTypes[regionTypes==""] <- "Ocean"
-  annot450k$Relation_to_UCSC_CpG_Island_Summary <- regionTypes
+  annot450k$Relation_to_Island <- regionTypes
   regionTypes <- unique(regionTypes)
   ###############################################
   # Separately for each region type and quantile normalize samples:
@@ -160,19 +161,19 @@ regRCPqnREF <- function(M_data, ref_path, data_name){
   # - Separately for each probe type quantile normalize samples on target distribution.
   ###############################################
   for (region_i in seq(length(regionTypes))){
-    annot450k_part <- annot450k[annot450k$Relation_to_UCSC_CpG_Island_Summary == regionTypes[region_i], ]
-    probe.II.Name <- annot450k_part$Name[annot450k_part$Infinium_Design_Type == "II"]
-    probe.I.Name <- annot450k_part$Name[annot450k_part$Infinium_Design_Type == "I"]
+    annot450k_part <- annot450k[annot450k$Relation_to_Island == regionTypes[region_i], ]
+    probe.II.Name <- annot450k_part$Name[annot450k_part$Type == "II"]
+    probe.I.Name <- annot450k_part$Name[annot450k_part$Type == "I"]
     anno1 <- annot450k_part[1:(nrow(annot450k_part)-1),]
     anno2 <- annot450k_part[2:nrow(annot450k_part),]
-    flag <- ((abs(anno1$MAPINFO - anno2$MAPINFO)) < dist_ & (anno1$CHR == anno2$CHR) &
-     (anno1$Infinium_Design_Type != anno2$Infinium_Design_Type))
+    flag <- ((abs(anno1$pos - anno2$pos)) < dist_ & (anno1$chr == anno2$chr) &
+     (anno1$Type != anno2$Type))
     anno1 <- anno1[flag,]
     anno2 <- anno2[flag,]
     probe.I <- rownames(anno1)
     probe.II <- rownames(anno2)
-    probe.I[anno2$Infinium_Design_Type=="I"] <- rownames(anno2)[anno2$Infinium_Design_Type == "I"]
-    probe.II[anno1$Infinium_Design_Type=="II"] <- rownames(anno1)[anno1$Infinium_Design_Type == "II"]
+    probe.I[anno2$Type=="I"] <- rownames(anno2)[anno2$Type == "I"]
+    probe.II[anno1$Type=="II"] <- rownames(anno1)[anno1$Type == "II"]
     raw.M.t <- M_data[c(probe.I, probe.II),]
     # linear regression
     M.II <- raw.M.t[probe.II,]
