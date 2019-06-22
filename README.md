@@ -55,7 +55,7 @@ M_data_norm <- regRCPqn(M_data=BloodParkinson1, ref_path=ref_path, data_name=dat
 # Load data
 data(BloodParkinson2)
 
-# Set directory to save reference distribution
+# Set directory to read reference distribution
 ref_path <- "./example/"
 # Set dataset label
 data_name <- "Example"
