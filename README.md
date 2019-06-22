@@ -8,7 +8,7 @@ An R package that extends RCP for meta-analysis usage introducing:
 
 ## Installation:
 
-Depends: data.table, preprocessCore, IlluminaHumanMethylation450kanno.ilmn12.hg19
+Depends: R ($\geq$ 3.5.0), data.table, preprocessCore, IlluminaHumanMethylation450kanno.ilmn12.hg19
 
 library(devtools)
 install_github("regRCPqn")
