@@ -6,7 +6,14 @@
 #' @param save_ref (TRUE): whether to save the reference distribution of the normalized data set.
 #' @export
 #' @examples
-#' regRCPqn(M_data, ref_path, data_name,save_ref=TRUE)
+#' # Load dataset
+#' data(BloodParkinson1)
+#' # Set directory to save reference distribution
+#' ref_path <- "./example/"
+#' # Set dataset label
+#' data_name <- "Example"
+#' # Run regRCPqn
+#' M_data_norm <- regRCPqn(M_data=BloodParkinson1, ref_path=ref_path, data_name=data_name, save_ref=TRUE)
 
 require(data.table)
 require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
@@ -118,7 +125,15 @@ regRCPqn <- function(M_data, ref_path, data_name,save_ref=TRUE){
 #' @param data_name: data_name: prefix used in regRCPqn to save the reference distribution files.
 #' @export
 #' @examples
-#' regRCPqnREF(M_data, ref_path, data_name)
+#' # Load data
+#' data(BloodParkinson2)
+#' # Set directory to save reference distribution
+#' ref_path <- "./example/"
+#' # Set dataset label
+#' data_name <- "Example"
+#' # Run regRCPqnREF
+#' M_data_norm_ref <- regRCPqnREF(M_data=BloodParkinson2, ref_path=ref_path, data_name=data_name)
+
 
 ###############################################
 regRCPqnREF <- function(M_data, ref_path, data_name){
