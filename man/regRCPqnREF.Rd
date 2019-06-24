@@ -17,5 +17,12 @@ regRCPqnREF(M_data, ref_path, data_name)
 The regRCPqnREF Function
 }
 \examples{
-regRCPqnREF(M_data, ref_path, data_name)
+# Load data
+data(BloodParkinson2)
+# Set directory to save reference distribution
+ref_path <- "./example/"
+# Set dataset label
+data_name <- "Example"
+# Run regRCPqnREF
+M_data_norm_ref <- regRCPqnREF(M_data=BloodParkinson2, ref_path=ref_path, data_name=data_name)
 }
